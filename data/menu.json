@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "name": "香煎雞胸佐藜麥蔬菜碗",
+    "price": 180,
+    "img": "images/meal1.png",
+    "available": true
+  },
+  {
+    "id": 2,
+    "name": "彩蔬板腱牛排全麥義大利麵",
+    "price": 220,
+    "img": "images/meal2.png",
+    "available": true
+  },
+  {
+    "id": 3,
+    "name": "酪梨抹醬全麥吐司佐白蝦",
+    "price": 200,
+    "img": "images/meal3.png",
+    "available": true
+  },
+  {
+    "id": 4,
+    "name": "烤鯖魚地瓜健康餐盒",
+    "price": 190,
+    "img": "images/meal4.png",
+    "available": true
+  },
+  {
+    "id": 5,
+    "name": "蒜泥白肉藜麥健康餐",
+    "price": 180,
+    "img": "images/meal5.png",
+    "available": true
+  },
+  {
+    "id": 6,
+    "name": "檸香鮭魚蕎麥麵",
+    "price": 210,
+    "img": "images/meal6.png",
+    "available": true
+  },
+  {
+    "id": 7,
+    "name": "滑蛋牛肉墨西哥捲餅",
+    "price": 195,
+    "img": "images/meal7.png",
+    "available": true
+  },
+  {
+    "id": 8,
+    "name": "雞肉飯",
+    "price": 50,
+    "img": "/uploads/meal_1776848583256.webp",
+    "available": true
+  }
+]

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>健人餐盒 — 店內訂單系統</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#3d8b37;--green-dark:#2d6b28;--green-light:#e8f5e3;
+  --orange:#e87722;--red:#d94f3d;--blue:#2e7bc4;
+  --text:#1e2023;--muted:#6b7280;--border:#e5e7eb;
+  --bg:#f3f4f6;--white:#fff;--radius:10px;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+body{font-family:'Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--green-dark);color:#fff;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-brand{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.topbar-right{display:flex;align-items:center;gap:24px;font-size:.85rem}
+.topbar-right span{opacity:.85}
+#clock{font-size:1rem;font-weight:600;letter-spacing:.05em}
+
+/* ── TABS ── */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);flex-shrink:0}
+.tab{padding:12px 28px;font-size:.9rem;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted);transition:all .2s;margin-bottom:-2px}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover:not(.active){color:var(--text)}
+
+/* ── MAIN ── */
+.main{flex:1;overflow:hidden;display:flex}
+.view{display:none;width:100%;height:100%}
+.view.active{display:flex}
+
+/* ══ VIEW 1: 點餐 ══ */
+.pos-left{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.menu-item{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent}
+.menu-item:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.menu-item.selected{border-color:var(--green)}
+.menu-item img{width:100%;height:120px;object-fit:cover}
+.menu-item-body{padding:10px 12px}
+.menu-item-name{font-size:.85rem;font-weight:700;margin-bottom:4px;line-height:1.3}
+.menu-item-price{font-size:1rem;font-weight:800;color:var(--green)}
+.menu-item-add{width:100%;margin-top:8px;padding:7px;background:var(--green-light);color:var(--green);border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:.82rem;transition:background .2s}
+.menu-item-add:hover{background:var(--green);color:#fff}
+
+.pos-right{width:340px;background:var(--white);display:flex;flex-direction:column;border-left:1px solid var(--border)}
+.order-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.order-header h3{font-size:1rem;font-weight:700}
+.btn-clear{background:none;border:1px solid var(--border);padding:5px 12px;border-radius:6px;font-size:.78rem;cursor:pointer;color:var(--muted)}
+.btn-clear:hover{background:var(--bg)}
+
+.order-customer{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px}
+.order-customer input{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.85rem;font-family:inherit}
+.order-customer input:focus{outline:none;border-color:var(--green)}
+
+.order-items{flex:1;overflow-y:auto;padding:8px 0}
+.order-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:.9rem;gap:8px}
+.order-empty-icon{font-size:2.5rem}
+
+.order-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #f0f0f0}
+.order-row-name{flex:1;font-size:.85rem;font-weight:600;line-height:1.3}
+.order-row-price{font-size:.85rem;color:var(--green);font-weight:700;min-width:52px;text-align:right}
+.qty-ctrl{display:flex;align-items:center;gap:6px}
+.qty-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);background:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;line-height:1;color:var(--text)}
+.qty-btn:hover{background:var(--bg)}
+.qty-num{font-size:.9rem;font-weight:700;min-width:20px;text-align:center}
+.btn-remove{background:none;border:none;color:#ccc;cursor:pointer;font-size:1rem;padding:2px}
+.btn-remove:hover{color:var(--red)}
+
+.order-note-row{padding:4px 14px 8px}
+.order-note-row input{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.78rem;color:var(--muted);font-family:inherit}
+.order-note-row input:focus{outline:none;border-color:var(--green)}
+
+.order-footer{padding:14px 16px;border-top:2px solid var(--border)}
+.order-summary{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.summary-row{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.summary-total{display:flex;justify-content:space-between;font-size:1.1rem;font-weight:800;color:var(--text)}
+.btn-submit{width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-submit:hover{background:var(--green-dark)}
+.btn-submit:disabled{background:#ccc;cursor:not-allowed}
+
+/* ══ VIEW 2: 訂單管理 ══ */
+.queue-view{flex-direction:column;padding:16px;overflow-y:auto;gap:16px}
+.queue-filters{display:flex;gap:8px;flex-wrap:wrap}
+.filter-btn{padding:7px 18px;border-radius:999px;border:1.5px solid var(--border);background:var(--white);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.filter-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+.queue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.order-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border-left:4px solid var(--border)}
+.order-card.status-pending{border-left-color:var(--orange)}
+.order-card.status-making{border-left-color:var(--blue)}
+.order-card.status-ready{border-left-color:var(--green)}
+.order-card.status-done{border-left-color:#aaa;opacity:.6}
+.card-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-num{font-size:1.1rem;font-weight:800}
+.card-time{font-size:.75rem;color:var(--muted)}
+.card-customer{font-size:.8rem;color:var(--muted);font-weight:600}
+.card-status{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px}
+.status-pending .card-status{background:#fff3e0;color:var(--orange)}
+.status-making .card-status{background:#e3f2fd;color:var(--blue)}
+.status-ready .card-status{background:var(--green-light);color:var(--green)}
+.status-done .card-status{background:#f0f0f0;color:#888}
+.card-body{padding:10px 14px}
+.card-item-row{font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;padding:2px 0}
+.card-item-row span:first-child{font-weight:600;color:var(--text)}
+.card-note{font-size:.75rem;color:var(--orange);margin-top:4px}
+.card-total{font-size:.9rem;font-weight:800;color:var(--green);text-align:right;padding:6px 14px;border-top:1px solid var(--border)}
+.card-actions{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)}
+.card-btn{flex:1;padding:7px;border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-next{background:var(--green-light);color:var(--green)}
+.btn-next:hover{background:var(--green);color:#fff}
+.btn-done-final{background:#f0f0f0;color:#888}
+.btn-done-final:hover{background:#e0e0e0}
+.btn-cancel{background:#fff0f0;color:var(--red)}
+.btn-cancel:hover{background:var(--red);color:#fff}
+
+/* ══ VIEW 3: 統計 ══ */
+.stats-view{flex-direction:column;padding:20px;overflow-y:auto;gap:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);text-align:center}
+.stat-card-icon{font-size:2rem;margin-bottom:8px}
+.stat-card-val{font-size:2rem;font-weight:800;color:var(--green)}
+.stat-card-label{font-size:.82rem;color:var(--muted);margin-top:4px}
+.stats-table-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.stats-table-title{padding:14px 18px;font-weight:700;border-bottom:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 16px;font-size:.85rem;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--bg);font-weight:700;color:var(--muted)}
+td:last-child,th:last-child{text-align:right}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-num{font-size:4rem;font-weight:900;color:var(--green);line-height:1}
+.modal-title{font-size:1.2rem;font-weight:700;margin:12px 0 6px}
+.modal-sub{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+.modal-detail{background:var(--bg);border-radius:8px;padding:14px;text-align:left;margin-bottom:20px;font-size:.85rem}
+.modal-detail-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--muted)}
+.modal-detail-row span:first-child{font-weight:600;color:var(--text)}
+.modal-close{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer}
+
+/* ══ VIEW 4: 菜單管理 ══ */
+.manage-view{flex-direction:column;padding:20px;overflow-y:auto;gap:16px}
+.manage-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.manage-header h2{font-size:1.1rem;font-weight:700}
+.manage-hint{font-size:.82rem;color:var(--muted)}
+.manage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.manage-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:opacity .2s;border:2px solid transparent}
+.manage-card.unavailable{opacity:.5;border-color:#e5e7eb}
+.manage-card.available{border-color:var(--green)}
+.manage-card-img{width:100%;height:130px;object-fit:cover;display:block}
+.manage-card-body{padding:12px 14px}
+.manage-card-name{font-size:.9rem;font-weight:700;margin-bottom:10px}
+.manage-price-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.manage-price-row label{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.manage-price-input{width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:.9rem;font-weight:700;color:var(--green);font-family:inherit;text-align:center}
+.manage-price-input:focus{outline:none;border-color:var(--green)}
+.manage-price-save{padding:5px 12px;background:var(--green-light);color:var(--green);border:none;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s}
+.manage-price-save:hover{background:var(--green);color:#fff}
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle-label{font-size:.82rem;font-weight:600}
+.toggle-label.on{color:var(--green)}
+.toggle-label.off{color:var(--muted)}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:999px;cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;font-size:1.8rem;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(61,139,55,.45);display:none;align-items:center;justify-content:center;transition:background .2s,transform .2s;z-index:50;line-height:1}
+.fab:hover{background:var(--green-dark);transform:scale(1.08)}
+.fab.show{display:flex}
+
+/* ── ADD PRODUCT MODAL ── */
+.add-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;padding:20px}
+.add-modal-overlay.active{opacity:1;pointer-events:all}
+.add-modal{background:#fff;border-radius:16px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden}
+.add-modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.add-modal-head h3{font-size:1rem;font-weight:700}
+.add-modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);padding:2px 6px}
+.add-modal-close:hover{color:var(--text)}
+.add-modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.add-form-group{display:flex;flex-direction:column;gap:6px}
+.add-form-group label{font-size:.82rem;font-weight:600;color:var(--muted)}
+.add-form-group input[type=text],
+.add-form-group input[type=number]{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;transition:border-color .2s}
+.add-form-group input:focus{outline:none;border-color:var(--green)}
+.img-upload-box{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden}
+.img-upload-box:hover{border-color:var(--green)}
+.img-upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.img-upload-preview{width:100%;height:130px;object-fit:cover;border-radius:6px;display:none}
+.img-upload-placeholder{color:var(--muted);font-size:.85rem;pointer-events:none}
+.img-upload-placeholder span{font-size:1.8rem;display:block;margin-bottom:6px}
+.add-modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px}
+.btn-add-confirm{flex:1;padding:11px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-add-confirm:hover{background:var(--green-dark)}
+.btn-add-cancel{padding:11px 20px;background:var(--bg);color:var(--muted);border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer}
+.btn-add-cancel:hover{background:var(--border)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:99px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">🥗 健人餐盒 — 店內訂單系統</div>
+  <div class="topbar-right">
+    <span id="date-display"></span>
+    <span id="clock">00:00:00</span>
+    <span id="topbar-pending">待處理：<strong id="pending-count">0</strong> 筆</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">🛒 點餐</div>
+  <div class="tab" onclick="switchTab(1)">📋 訂單管理</div>
+  <div class="tab" onclick="switchTab(2)">📊 今日統計</div>
+  <div class="tab" onclick="switchTab(3)">⚙️ 菜單管理</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ══ VIEW 0: 點餐 ══ -->
+  <div class="view active" style="display:flex">
+    <div class="pos-left">
+      <div class="menu-grid" id="menuGrid"></div>
+    </div>
+    <div class="pos-right">
+      <div class="order-header">
+        <h3>目前訂單</h3>
+        <button class="btn-clear" onclick="clearOrder()">清空</button>
+      </div>
+      <div class="order-customer">
+        <input type="text" id="customerName" placeholder="顧客姓名 / 取餐號碼" maxlength="20" />
+      </div>
+      <div class="order-items" id="orderItems">
+        <div class="order-empty">
+          <div class="order-empty-icon">🍱</div>
+          <span>點選左側餐點加入訂單</span>
+        </div>
+      </div>
+      <div class="order-footer">
+        <div class="order-summary">
+          <div class="summary-row"><span>品項數</span><span id="sumCount">0 項</span></div>
+          <div class="summary-row"><span>小計</span><span id="sumSub">$0</span></div>
+          <div class="summary-total"><span>合計</span><span id="sumTotal">$0</span></div>
+        </div>
+        <button class="btn-submit" id="submitBtn" onclick="submitOrder()" disabled>送出訂單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW 1: 訂單管理 ══ -->
+  <div class="view queue-view" id="queueView">
+    <div class="queue-filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">全部</button>
+      <button class="filter-btn" onclick="setFilter('pending',this)">待製作</button>
+      <button class="filter-btn" onclick="setFilter('making',this)">製作中</button>
+      <button class="filter-btn" onclick="setFilter('ready',this)">待取餐</button>
+      <button class="filter-btn" onclick="setFilter('done',this)">已完成</button>
+    </div>
+    <div class="queue-grid" id="queueGrid">
+      <div style="color:var(--muted);font-size:.9rem;grid-column:1/-1;text-align:center;padding:40px 0">尚無訂單</div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW 2: 統計 ══ -->
+  <div class="view stats-view" id="statsView">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="stats-table-wrap">
+      <div class="stats-table-title">📦 各餐點銷售排行</div>
+      <table><thead><tr><th>餐點名稱</th><th>售出數量</th><th>銷售金額</th></tr></thead>
+      <tbody id="statsTable"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ VIEW 3: 菜單管理 ══ -->
+  <div class="view manage-view" id="manageView">
+    <div class="manage-header">
+      <h2>⚙️ 菜單管理</h2>
+      <span class="manage-hint">綠色框 = 上架中　灰色框 = 已下架，下架餐點不會顯示在點餐頁</span>
+    </div>
+    <div class="manage-grid" id="manageGrid"></div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openAddModal()">＋</button>
+
+<!-- ADD PRODUCT MODAL -->
+<div class="add-modal-overlay" id="addModal" onclick="closeAddOnOverlay(event)">
+  <div class="add-modal">
+    <div class="add-modal-head">
+      <h3>新增餐點</h3>
+      <button class="add-modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="add-modal-body">
+      <div class="add-form-group">
+        <label>餐點名稱</label>
+        <input type="text" id="newName" placeholder="例：香烤雞腿飯" maxlength="30" />
+      </div>
+      <div class="add-form-group">
+        <label>售價（元）</label>
+        <input type="number" id="newPrice" placeholder="例：180" min="1" />
+      </div>
+      <div class="add-form-group">
+        <label>餐點圖片</label>
+        <div class="img-upload-box" id="uploadBox">
+          <input type="file" accept="image/*" id="newImg" onchange="previewImg(event)" />
+          <img class="img-upload-preview" id="imgPreview" alt="預覽" />
+          <div class="img-upload-placeholder" id="uploadPlaceholder">
+            <span>📷</span>點擊或拖曳上傳圖片
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="add-modal-foot">
+      <button class="btn-add-cancel" onclick="closeAddModal()">取消</button>
+      <button class="btn-add-confirm" onclick="confirmAddProduct()">新增餐點</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-num" id="modalNum">A01</div>
+    <div class="modal-title">訂單已送出！</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-detail" id="modalDetail"></div>
+    <button class="modal-close" onclick="closeModal()">確認，繼續點餐</button>
+  </div>
+</div>
+
+<script>
+/* ── DATA ── */
+let MENU = [];
+
+let cart = [];
+let orders = [];
+let orderSeq = 1;
+let filterStatus = 'all';
+
+/* ── INIT ── */
+async function init(){
+  await Promise.all([loadMenu(), loadOrders()]);
+  renderMenu();
+  updatePendingCount();
+}
+init();
+
+async function loadMenu(){
+  try{ MENU = await fetch('/api/menu').then(r=>r.json()); }
+  catch(e){ console.error('載入菜單失敗',e); }
+}
+
+async function loadOrders(){
+  try{
+    const data = await fetch('/api/orders').then(r=>r.json());
+    orders = data.map(o=>({...o, time:new Date(o.time)}));
+    if(orders.length) orderSeq = Math.max(...orders.map(o=>parseInt(o.num.slice(1))))+1;
+  } catch(e){ console.error('載入訂單失敗',e); }
+}
+
+/* ── CLOCK ── */
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  document.getElementById('date-display').textContent=
+    `${n.getFullYear()}/${n.getMonth()+1}/${n.getDate()} 週${'日一二三四五六'[n.getDay()]}`;
+}
+setInterval(updateClock,1000); updateClock();
+
+/* ── TABS ── */
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.main .view').forEach((v,j)=>{
+    v.classList.toggle('active',i===j);
+    v.style.display=i===j?'flex':'none';
+  });
+  if(i===1) renderQueue();
+  if(i===2) renderStats();
+  if(i===3) renderManage();
+  updateFab(i);
+}
+
+/* ── MENU GRID ── */
+function renderMenu(){
+  const visible=MENU.filter(m=>m.available);
+  document.getElementById('menuGrid').innerHTML=visible.length
+    ? visible.map(m=>`
+        <div class="menu-item" id="mi${m.id}">
+          <img src="${m.img||''}" alt="${m.name}" onerror="this.style.background='#e8f5e3';this.src='';this.alt='🍱'" />
+          <div class="menu-item-body">
+            <div class="menu-item-name">${m.name}</div>
+            <div class="menu-item-price">$${m.price}</div>
+            <button class="menu-item-add" onclick="addToCart(${m.id})">＋ 加入訂單</button>
+          </div>
+        </div>`).join('')
+    : `<div style="color:var(--muted);font-size:.9rem;grid-column:1/-1;text-align:center;padding:60px 0">目前所有餐點已下架</div>`;
+}
+
+/* ── CART ── */
+function addToCart(id){
+  const m=MENU.find(x=>x.id===id);
+  const ex=cart.find(x=>x.id===id);
+  if(ex){ex.qty++;}
+  else{cart.push({id,name:m.name,price:m.price,qty:1,note:''});}
+  renderCart();
+}
+function changeQty(id,delta){
+  const ex=cart.find(x=>x.id===id);
+  if(!ex)return;
+  ex.qty+=delta;
+  if(ex.qty<=0)cart=cart.filter(x=>x.id!==id);
+  renderCart();
+}
+function removeFromCart(id){cart=cart.filter(x=>x.id!==id);renderCart();}
+function updateNote(id,val){const ex=cart.find(x=>x.id===id);if(ex)ex.note=val;}
+function clearOrder(){
+  cart=[];
+  document.getElementById('customerName').value='';
+  renderCart();
+}
+
+function renderCart(){
+  const el=document.getElementById('orderItems');
+  if(!cart.length){
+    el.innerHTML=`<div class="order-empty"><div class="order-empty-icon">🍱</div><span>點選左側餐點加入訂單</span></div>`;
+    updateSummary();return;
+  }
+  el.innerHTML=cart.map(c=>`
+    <div>
+      <div class="order-row">
+        <div class="order-row-name">${c.name}</div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(${c.id},-1)">−</button>
+          <span class="qty-num">${c.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${c.id},1)">＋</button>
+        </div>
+        <div class="order-row-price">$${c.price*c.qty}</div>
+        <button class="btn-remove" onclick="removeFromCart(${c.id})">✕</button>
+      </div>
+      <div class="order-note-row">
+        <input type="text" placeholder="備註（例：不要辣）" value="${c.note}"
+          oninput="updateNote(${c.id},this.value)" />
+      </div>
+    </div>`).join('');
+  updateSummary();
+}
+
+function updateSummary(){
+  const count=cart.reduce((s,c)=>s+c.qty,0);
+  const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
+  document.getElementById('sumCount').textContent=count+' 項';
+  document.getElementById('sumSub').textContent='$'+total;
+  document.getElementById('sumTotal').textContent='$'+total;
+  document.getElementById('submitBtn').disabled=!cart.length;
+}
+
+/* ── SUBMIT ORDER ── */
+async function submitOrder(){
+  if(!cart.length)return;
+  const customer=document.getElementById('customerName').value.trim()||'顧客';
+  const num='A'+String(orderSeq).padStart(2,'0');
+  const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const order={num,customer,items:JSON.parse(JSON.stringify(cart)),total,status:'pending',time:new Date()};
+  try{ await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}); }
+  catch(e){ console.error(e); }
+  orders.unshift(order);
+  orderSeq++;
+
+  // modal
+  document.getElementById('modalNum').textContent=num;
+  document.getElementById('modalSub').textContent=`${customer}  ·  共 ${cart.reduce((s,c)=>s+c.qty,0)} 項  ·  $${total}`;
+  document.getElementById('modalDetail').innerHTML=order.items.map(c=>
+    `<div class="modal-detail-row"><span>${c.name} ×${c.qty}</span><span>$${c.price*c.qty}</span></div>`
+    +(c.note?`<div style="font-size:.75rem;color:var(--orange);padding:0 0 4px 4px">備註：${c.note}</div>`:'')
+  ).join('');
+  document.getElementById('confirmModal').classList.add('active');
+
+  updatePendingCount();
+  cart=[];
+  document.getElementById('customerName').value='';
+  renderCart();
+}
+
+function closeModal(){document.getElementById('confirmModal').classList.remove('active');}
+
+/* ── QUEUE ── */
+const STATUS_LABEL={pending:'待製作',making:'製作中',ready:'待取餐',done:'已完成'};
+const STATUS_NEXT={pending:'making',making:'ready',ready:'done'};
+const STATUS_NEXT_LABEL={pending:'開始製作',making:'標記完成',ready:'顧客取餐'};
+
+function setFilter(s,btn){
+  filterStatus=s;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQueue();
+}
+
+function renderQueue(){
+  const list=filterStatus==='all'?orders:orders.filter(o=>o.status===filterStatus);
+  const el=document.getElementById('queueGrid');
+  if(!list.length){el.innerHTML=`<div style="color:var(--muted);font-size:.9rem;grid-column:1/-1;text-align:center;padding:40px 0">無訂單</div>`;return;}
+  el.innerHTML=list.map(o=>{
+    const t=o.time;
+    const timeStr=[t.getHours(),t.getMinutes()].map(v=>String(v).padStart(2,'0')).join(':');
+    return `<div class="order-card status-${o.status}" id="card-${o.num}">
+      <div class="card-head">
+        <div>
+          <div class="card-num">${o.num}</div>
+          <div class="card-customer">${o.customer}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="card-status">${STATUS_LABEL[o.status]}</div>
+          <div class="card-time">${timeStr}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        ${o.items.map(i=>`
+          <div class="card-item-row"><span>${i.name}</span><span>×${i.qty}</span></div>
+          ${i.note?`<div class="card-note">📝 ${i.note}</div>`:''}`).join('')}
+      </div>
+      <div class="card-total">合計 $${o.total}</div>
+      ${o.status!=='done'?`
+      <div class="card-actions">
+        <button class="card-btn btn-next" onclick="nextStatus('${o.num}')">${STATUS_NEXT_LABEL[o.status]}</button>
+        <button class="card-btn btn-cancel" onclick="cancelOrder('${o.num}')">取消</button>
+      </div>`:`
+      <div class="card-actions">
+        <button class="card-btn btn-done-final" onclick="deleteOrder('${o.num}')">移除紀錄</button>
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+async function nextStatus(num){
+  const o=orders.find(x=>x.num===num);
+  if(o&&STATUS_NEXT[o.status]){
+    o.status=STATUS_NEXT[o.status];
+    try{ await fetch(`/api/orders/${num}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:o.status})}); }
+    catch(e){ console.error(e); }
+  }
+  updatePendingCount();
+  renderQueue();
+}
+async function cancelOrder(num){
+  if(confirm('確定要取消此訂單？')){
+    try{ await fetch(`/api/orders/${num}`,{method:'DELETE'}); } catch(e){ console.error(e); }
+    orders=orders.filter(x=>x.num!==num);
+    updatePendingCount();
+    renderQueue();
+  }
+}
+async function deleteOrder(num){
+  try{ await fetch(`/api/orders/${num}`,{method:'DELETE'}); } catch(e){ console.error(e); }
+  orders=orders.filter(x=>x.num!==num);
+  renderQueue();
+}
+
+function updatePendingCount(){
+  document.getElementById('pending-count').textContent=orders.filter(o=>o.status!=='done').length;
+}
+
+/* ── FAB 顯示控制 ── */
+function updateFab(tabIndex){
+  document.getElementById('fab').classList.toggle('show', tabIndex===3);
+}
+
+/* ── ADD PRODUCT MODAL ── */
+let newImgDataUrl='';
+
+function openAddModal(){
+  document.getElementById('newName').value='';
+  document.getElementById('newPrice').value='';
+  document.getElementById('newImg').value='';
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('uploadPlaceholder').style.display='block';
+  newImgDataUrl='';
+  document.getElementById('addModal').classList.add('active');
+}
+function closeAddModal(){document.getElementById('addModal').classList.remove('active');}
+function closeAddOnOverlay(e){if(e.target===document.getElementById('addModal'))closeAddModal();}
+
+function previewImg(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    newImgDataUrl=ev.target.result;
+    const preview=document.getElementById('imgPreview');
+    preview.src=newImgDataUrl;
+    preview.style.display='block';
+    document.getElementById('uploadPlaceholder').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function confirmAddProduct(){
+  const name=document.getElementById('newName').value.trim();
+  const price=parseInt(document.getElementById('newPrice').value);
+  if(!name){alert('請輸入餐點名稱');return;}
+  if(!price||price<1){alert('請輸入有效售價');return;}
+  const fileInput=document.getElementById('newImg');
+  const formData=new FormData();
+  formData.append('name',name);
+  formData.append('price',price);
+  if(fileInput.files[0]) formData.append('image',fileInput.files[0]);
+  try{
+    const newItem=await fetch('/api/menu',{method:'POST',body:formData}).then(r=>r.json());
+    MENU.push(newItem);
+    closeAddModal();
+    renderManage();
+    renderMenu();
+  }catch(e){
+    alert('新增失敗，請確認伺服器是否已啟動');
+    console.error(e);
+  }
+}
+
+/* ── MANAGE ── */
+function renderManage(){
+  document.getElementById('manageGrid').innerHTML=MENU.map(m=>`
+    <div class="manage-card ${m.available?'available':'unavailable'}" id="mc${m.id}">
+      <img class="manage-card-img" src="${m.img}" alt="${m.name}" onerror="this.style.background='#e8f5e3';this.src='';this.alt='🍱'" />
+      <div class="manage-card-body">
+        <div class="manage-card-name">${m.name}</div>
+        <div class="manage-price-row">
+          <label>售價</label>
+          <input class="manage-price-input" type="number" id="price${m.id}" value="${m.price}" min="1" />
+          <button class="manage-price-save" onclick="savePrice(${m.id})">儲存</button>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label ${m.available?'on':'off'}" id="toggleLabel${m.id}">
+            ${m.available?'✅ 上架中':'⛔ 已下架'}
+          </span>
+          <label class="toggle">
+            <input type="checkbox" ${m.available?'checked':''} onchange="toggleAvailable(${m.id})" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleAvailable(id){
+  const m=MENU.find(x=>x.id===id);
+  if(!m)return;
+  m.available=!m.available;
+  try{ await fetch(`/api/menu/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({available:m.available})}); }
+  catch(e){ console.error(e); }
+  const card=document.getElementById('mc'+id);
+  card.classList.toggle('available',m.available);
+  card.classList.toggle('unavailable',!m.available);
+  const lbl=document.getElementById('toggleLabel'+id);
+  lbl.textContent=m.available?'✅ 上架中':'⛔ 已下架';
+  lbl.className='toggle-label '+(m.available?'on':'off');
+  renderMenu();
+}
+
+async function savePrice(id){
+  const m=MENU.find(x=>x.id===id);
+  if(!m)return;
+  const val=parseInt(document.getElementById('price'+id).value);
+  if(!val||val<1){alert('請輸入有效價格');return;}
+  m.price=val;
+  try{ await fetch(`/api/menu/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({price:val})}); }
+  catch(e){ console.error(e); }
+  renderMenu();
+  const btn=document.querySelector(`#mc${id} .manage-price-save`);
+  btn.textContent='✓ 已儲存';
+  btn.style.background='var(--green)';btn.style.color='#fff';
+  setTimeout(()=>{btn.textContent='儲存';btn.style.background='';btn.style.color='';},1500);
+}
+
+/* ── STATS ── */
+function renderStats(){
+  const today=orders; // all in-memory = today's session
+  const totalOrders=today.length;
+  const totalRevenue=today.reduce((s,o)=>s+o.total,0);
+  const totalItems=today.reduce((s,o)=>s+o.items.reduce((ss,i)=>ss+i.qty,0),0);
+  const doneOrders=today.filter(o=>o.status==='done').length;
+
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-card-icon">📋</div><div class="stat-card-val">${totalOrders}</div><div class="stat-card-label">今日訂單數</div></div>
+    <div class="stat-card"><div class="stat-card-icon">💰</div><div class="stat-card-val">$${totalRevenue}</div><div class="stat-card-label">今日營業額</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🍱</div><div class="stat-card-val">${totalItems}</div><div class="stat-card-label">售出餐點數</div></div>
+    <div class="stat-card"><div class="stat-card-icon">✅</div><div class="stat-card-val">${doneOrders}</div><div class="stat-card-label">已完成訂單</div></div>`;
+
+  const salesMap={};
+  today.forEach(o=>o.items.forEach(i=>{
+    if(!salesMap[i.name])salesMap[i.name]={qty:0,rev:0};
+    salesMap[i.name].qty+=i.qty;
+    salesMap[i.name].rev+=i.price*i.qty;
+  }));
+  const sorted=Object.entries(salesMap).sort((a,b)=>b[1].qty-a[1].qty);
+  document.getElementById('statsTable').innerHTML=sorted.length
+    ?sorted.map(([name,{qty,rev}])=>`<tr><td>${name}</td><td>${qty} 份</td><td>$${rev}</td></tr>`).join('')
+    :`<tr><td colspan="3" style="text-align:center;color:var(--muted)">今日尚無銷售紀錄</td></tr>`;
+}
+</script>
+</body>
+</html>

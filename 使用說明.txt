@@ -1,0 +1,29 @@
+以下是完整使用說明：
+
+如何啟動後端
+第一步 — 開啟終端機
+在 VS Code 按 Ctrl + ` 開啟終端機
+
+第二步 — 進入資料夾並啟動
+
+
+cd "c:/Users/user/Desktop/思域頻道/claudecode/healthy-meal-website"
+node server.js
+
+第三步 — 看到這個就成功了：
+
+✅ 健人餐盒後端啟動成功
+👉 請開啟瀏覽器前往：http://localhost:3000/order-system.html
+
+第四步 — 開啟瀏覽器
+前往 http://localhost:3000/order-system.html
+-------------------------------------------------
+資料存在哪裡？
+資料	路徑
+菜單設定	data/menu.json
+所有訂單	data/orders.json
+上傳的圖片	uploads/ 資料夾
+關掉伺服器後資料不會消失，重新啟動會自動讀取上次的資料。
+
+關閉伺服器
+在終端機按 Ctrl + C 即可停止。
