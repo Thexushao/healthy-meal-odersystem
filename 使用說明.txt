@@ -1,5 +1,7 @@
 以下是完整使用說明：
 
+新電腦使用時，clone 下來後執行 npm install 再 node server.js 即可。
+
 如何啟動後端
 第一步 — 開啟終端機
 在 VS Code 按 Ctrl + ` 開啟終端機

@@ -1,1 +1,87 @@
-[]
+[
+  {
+    "num": "A04",
+    "customer": "顧客",
+    "items": [
+      {
+        "id": 8,
+        "name": "雞肉飯",
+        "price": 50,
+        "qty": 1,
+        "note": ""
+      }
+    ],
+    "total": 50,
+    "status": "done",
+    "time": "2026-06-02T13:52:14.518Z"
+  },
+  {
+    "num": "A03",
+    "customer": "顧客",
+    "items": [
+      {
+        "id": 7,
+        "name": "滑蛋牛肉墨西哥捲餅",
+        "price": 195,
+        "qty": 1,
+        "note": ""
+      },
+      {
+        "id": 5,
+        "name": "蒜泥白肉藜麥健康餐",
+        "price": 180,
+        "qty": 1,
+        "note": ""
+      }
+    ],
+    "total": 375,
+    "status": "pending",
+    "time": "2026-06-02T13:52:12.262Z"
+  },
+  {
+    "num": "A02",
+    "customer": "顧客",
+    "items": [
+      {
+        "id": 2,
+        "name": "彩蔬板腱牛排全麥義大利麵",
+        "price": 220,
+        "qty": 1,
+        "note": ""
+      },
+      {
+        "id": 4,
+        "name": "烤鯖魚地瓜健康餐盒",
+        "price": 190,
+        "qty": 1,
+        "note": ""
+      }
+    ],
+    "total": 410,
+    "status": "pending",
+    "time": "2026-06-02T13:52:09.774Z"
+  },
+  {
+    "num": "A01",
+    "customer": "顧客",
+    "items": [
+      {
+        "id": 1,
+        "name": "香煎雞胸佐藜麥蔬菜碗",
+        "price": 180,
+        "qty": 1,
+        "note": ""
+      },
+      {
+        "id": 2,
+        "name": "彩蔬板腱牛排全麥義大利麵",
+        "price": 220,
+        "qty": 1,
+        "note": ""
+      }
+    ],
+    "total": 400,
+    "status": "pending",
+    "time": "2026-06-02T13:52:03.478Z"
+  }
+]
